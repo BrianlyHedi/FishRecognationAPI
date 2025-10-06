@@ -1,0 +1,178 @@
+generator client {
+  provider        = "prisma-client-js"
+  output          = "../../node_modules/.prisma/main-client"
+}
+
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+model User {
+  id           Int       @id @default(autoincrement()) @map("id")
+  nama         String    @map("nama")
+  username     String    @unique @map("username")
+  email        String?   @unique @map("email")
+  fullname     String?   @map("fullname")
+  passwordHash String    @map("password_hash")
+  role         String    @default("user") @map("role")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  tangkapans   Tangkapan[] @relation("UserTangkapan")
+  produks      Produksi[]  @relation("UserProduksi")
+
+  @@map("users")
+}
+
+
+model M_Ikan {
+  id              Int               @id @default(autoincrement()) @map("id")
+  nama            String            @unique @map("nama")
+  gambarUrl       String?           @map("gambar_url")
+  keterangan      String?           @map("keterangan")
+  createdAt       DateTime          @default(now()) @map("created_at")
+  updatedAt       DateTime          @updatedAt @map("updated_at")
+
+  tangkapanDetails TangkapanDetail[] @relation("IkanTangkapanDetail")
+  deteksiIkan      DeteksiIkan[]     @relation("IkanDeteksiIkan")
+  produks          Produksi[]        @relation("IkanProduksi")
+
+  @@map("m_ikan")
+}
+
+model M_Kondisi_Ikan {
+  id              Int               @id @default(autoincrement()) @map("id")
+  nama            String            @unique @map("nama")
+  deskripsi       String?           @map("deskripsi")
+  createdAt       DateTime          @default(now()) @map("created_at")
+  updatedAt       DateTime          @updatedAt @map("updated_at")
+
+  tangkapanDetails TangkapanDetail[] @relation("KondisiIkanTangkapanDetail")
+
+  @@map("m_kondisi_ikan")
+}
+
+model M_Kapal {
+  id              Int               @id @default(autoincrement()) @map("id")
+  nama            String            @unique @map("nama")
+  createdAt       DateTime          @default(now()) @map("created_at")
+  updatedAt       DateTime          @updatedAt @map("updated_at")
+
+  tangkapans      Tangkapan[]       @relation("KapalTangkapan")
+
+  @@map("m_kapal")
+}
+
+model M_Pelabuhan {
+  id              Int               @id @default(autoincrement()) @map("id")
+  nama            String            @unique @map("nama")
+  lokasiLat       Float?            @map("lokasi_lat")
+  lokasiLng       Float?            @map("lokasi_lng")
+  createdAt       DateTime          @default(now()) @map("created_at")
+  updatedAt       DateTime          @updatedAt @map("updated_at")
+
+  tangkapans      Tangkapan[]       @relation("PelabuhanTangkapan")
+
+  @@map("m_pelabuhan")
+}
+
+model M_ColdStorage {
+  id              Int               @id @default(autoincrement()) @map("id")
+  nama            String            @unique @map("nama")
+  createdAt       DateTime          @default(now()) @map("created_at")
+  updatedAt       DateTime          @updatedAt @map("updated_at")
+
+  tangkapanDetails TangkapanDetail[] @relation("ColdStorageTangkapanDetail")
+
+  @@map("m_cold_storage")
+}
+
+model Tangkapan {
+  id                Int             @id @default(autoincrement()) @map("id")
+  user              User            @relation("UserTangkapan", fields: [userId], references: [id])
+  userId            Int             @map("user_id")
+  kapal             M_Kapal         @relation("KapalTangkapan", fields: [kapalId], references: [id])
+  kapalId           Int             @map("kapal_id")
+  pelabuhan         M_Pelabuhan     @relation("PelabuhanTangkapan", fields: [pelabuhanId], references: [id])
+  pelabuhanId       Int             @map("pelabuhan_id")
+  tanggalPenangkapan DateTime        @map("tanggal_penangkapan")
+  waktuPenangkapan   DateTime        @map("waktu_penangkapan")
+  catatan           String?         @map("catatan")
+  lokasiLat         Float?          @map("lokasi_lat")
+  lokasiLng         Float?          @map("lokasi_lng")
+  createdAt         DateTime        @default(now()) @map("created_at")
+  updatedAt         DateTime        @updatedAt @map("updated_at")
+
+  tangkapanDetails  TangkapanDetail[] @relation("TangkapanTangkapanDetail")
+
+  @@map("tr_tangkapan")
+}
+
+model TangkapanDetail {
+  id                   Int             @id @default(autoincrement()) @map("id")
+  tangkapan             Tangkapan       @relation("TangkapanTangkapanDetail", fields: [tangkapanId], references: [id])
+  tangkapanId           Int             @map("tangkapan_id")
+  ikan                  M_Ikan          @relation("IkanTangkapanDetail", fields: [ikanId], references: [id])
+  ikanId                Int             @map("ikan_id")
+  qrId                   BigInt?        @map("id_qr") @unique
+  totalBeratKg          Float           @map("total_berat_kg")
+  kondisiIkan           M_Kondisi_Ikan  @relation("KondisiIkanTangkapanDetail", fields: [kondisiIkanId], references: [id])
+  kondisiIkanId         Int             @map("kondisi_ikan_id")
+  tanggalMasukColdstorage DateTime?      @map("tanggal_masuk_coldstorage")
+  coldStorage           M_ColdStorage?  @relation("ColdStorageTangkapanDetail", fields: [coldStorageId], references: [id])
+  coldStorageId         Int?            @map("cold_storage_id")
+  posisiPenyimpananColdstorage String? @map("posisi_penyimpanan_coldstorage")
+  keterangan            String?         @map("keterangan")
+  createdAt             DateTime        @default(now()) @map("created_at")
+  updatedAt             DateTime        @updatedAt @map("updated_at")
+
+  deteksiIkan           DeteksiIkan[]   @relation("TangkapanDetailDeteksiIkan")
+  
+  tangkapanQr      TangkapanQR? @relation(fields: [qrId], references: [id_qr])
+
+  @@map("tr_tangkapan_detail")
+}
+
+model DeteksiIkan {
+  id                  Int             @id @default(autoincrement()) @map("id")
+  tangkapanDetail     TangkapanDetail @relation("TangkapanDetailDeteksiIkan", fields: [tangkapanDetailId], references: [id])
+  tangkapanDetailId    Int             @map("tangkapan_detail_id")
+  ikan                M_Ikan         @relation("IkanDeteksiIkan", fields: [ikanId], references: [id])
+  ikanId              Int             @map("ikan_id")
+  akurasi             Float           @map("akurasi")
+  dipilih             Boolean         @default(false) @map("dipilih")
+  createdAt           DateTime        @default(now()) @map("created_at")
+  updatedAt           DateTime        @updatedAt @map("updated_at")
+
+  @@map("tr_deteksi_ikan")
+}
+
+model Produksi {
+  id          Int       @id @default(autoincrement()) @map("id")
+  user        User      @relation("UserProduksi", fields: [userId], references: [id])
+  userId      Int       @map("user_id")
+  ikan        M_Ikan    @relation("IkanProduksi", fields: [ikanId], references: [id])
+  ikanId      Int       @map("ikan_id")
+  tanggal     DateTime  @map("tanggal")
+  totalBeratKg Float    @map("total_berat_kg")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  @@unique([userId, ikanId, tanggal])
+  @@map("tr_histori_produksi")
+}
+
+model TangkapanQR {
+  id_qr        BigInt   @id @default(autoincrement()) @db.BigInt
+  original_name String
+  s3_key       String
+  mime_type    String
+  file_size    Int
+  created_at   DateTime @default(now())
+  updated_at   DateTime @updatedAt
+
+  // Relasi balik ke detail tangkapan (opsional, 1-1)
+  tr_tangkapan_detail TangkapanDetail?
+    @@map("tr_tangkapan_qr")
+}
