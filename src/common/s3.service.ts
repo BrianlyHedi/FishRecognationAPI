@@ -37,7 +37,7 @@ export class S3Service implements OnModuleInit {
 
   async uploadFile(file: Express.Multer.File, optKey = '') {
     const fileName = `${Date.now()}-${file.originalname}`;
-    const objectKey = `:fishrecognation/${optKey}${fileName}`;
+    const objectKey = `fishrecognation/${optKey}${fileName}`;
     await this.s3.send(
       new PutObjectCommand({
         Bucket: this.bucket,
@@ -55,7 +55,7 @@ export class S3Service implements OnModuleInit {
     mimeType: string,
     optKey = '',
   ) {
-    const objectKey = `:nama_layanan/${optKey}${fileName}`;
+    const objectKey = `fish/${optKey}${fileName}`;
     await this.s3.send(
       new PutObjectCommand({
         Bucket: this.bucket,

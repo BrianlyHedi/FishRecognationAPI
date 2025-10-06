@@ -34,6 +34,24 @@ export class TangkapanRepository {
     });
     }
 
+   async findById(id: number) {
+       return await this.prisma.tangkapan.findUnique({
+           where: {
+               id
+           },
+           include: {
+               tangkapanDetails: {
+                   include: {
+                       ikan: true,
+                       tangkapanQr: true,
+                       kondisiIkan: true,
+                   },
+               },
+               kapal: true,
+               pelabuhan: true,
+           },
+       });
+   }
     async createIkanIfNotExist(nama: string, gambarUrl ? : string) {
         let ikan = await this.prisma.m_Ikan.findUnique({
             where: {

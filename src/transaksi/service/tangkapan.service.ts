@@ -12,6 +12,25 @@ import {
     S3Service
 } from '../../common/s3.service';
 
+function convertBigIntAndDateToString(obj: any): any {
+    if (Array.isArray(obj)) {
+        return obj.map(item => convertBigIntAndDateToString(item));
+    } else if (obj !== null && typeof obj === 'object') {
+        if (obj instanceof Date) {
+            return obj.toISOString(); // konversi Date ke string ISO
+        }
+        const newObj: any = {};
+        for (const key in obj) {
+            if (typeof obj[key] === 'bigint') {
+                newObj[key] = obj[key].toString();
+            } else {
+                newObj[key] = convertBigIntAndDateToString(obj[key]);
+            }
+        }
+        return newObj;
+    }
+    return obj;
+}
 @Injectable()
 export class TangkapanService {
     constructor(
@@ -67,6 +86,13 @@ export class TangkapanService {
     }
 
     async findAll() {
-        return await this.repo.findAll();
-    }
+        const results = await this.repo.findAll();
+        return convertBigIntAndDateToString(results);
+        }
+
+        async findById(id: number) {
+            const result = await this.repo.findById(id);
+            if (!result) return null;
+            return convertBigIntAndDateToString(result);
+        }
 }

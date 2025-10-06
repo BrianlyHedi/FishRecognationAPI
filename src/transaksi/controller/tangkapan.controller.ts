@@ -4,7 +4,10 @@ import {
     Body,
     Get,
     UseGuards,
-    Req
+    Req,
+    NotFoundException,
+    Param,
+    BadRequestException
 } from '@nestjs/common';
 import {
     TangkapanService
@@ -38,5 +41,17 @@ export class TangkapanController {
     @Get()
     async findAll() {
         return this.service.findAll();
+    }
+    @Get(':id')
+    async getById(@Param('id') id: string) {
+        const parsedId = parseInt(id, 10);
+        if (isNaN(parsedId)) {
+            throw new BadRequestException('Invalid ID parameter');
+        }
+        const result = await this.service.findById(parsedId);
+        if (!result) {
+            throw new NotFoundException(`Data with ID ${parsedId} not found`);
+        }
+        return result;
     }
 }
